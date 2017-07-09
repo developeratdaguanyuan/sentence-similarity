@@ -4,6 +4,7 @@ import os
 import numpy as np
 
 
+# magic feature for Quora Question pairs
 def _read_magic_feature(filename):
     reader = open(filename)
     data = list()
@@ -67,6 +68,35 @@ def _build_data(word_to_id, filename, magic_feature_filename):
     return data
 
 
+def _initialize_random_matrix(shape, scale=0.05, seed=0):
+  if len(shape) != 2:
+    raise ValueError("Shape of embedding matrix must be 2D, "
+                     "got shape {}".format(shape))
+  numpy_rng = np.random.RandomState(seed)
+
+  return numpy_rng.uniform(low=-scale, high=scale, size=shape)
+
+
+def _get_word_embedding(wv_path, word_to_id):
+  m = _initialize_random_matrix((1 + len(word_to_id), 300))
+  cnt = 0
+  wv_file = open(wv_path)
+  while True:
+    line = wv_file.readline()
+    if not line:
+      break
+    cnt += 1
+    tokens = line.strip().split(' ')
+    if word_to_id[tokens[0].strip()] != cnt:
+      print('ERROR')
+      break
+
+    m[cnt] = [np.float32(tokens[i]) for i in range(1, len(tokens))]
+  wv_file.close()
+
+  return m
+
+
 def build_data(data_dir):
     # preparing path
     wv_path = os.path.join(data_dir, 'glove.840B.300d.short.txt')
@@ -79,8 +109,12 @@ def build_data(data_dir):
     train_data = data[:int(len(data) * 0.8)]
     valid_data = data[int(len(data) * 0.8) : int(len(data) * 0.9)]
     test_data = data[int(len(data) * 0.9):]
+
+    # load word embeddings
+    word_embedding = _get_word_embedding(wv_path, word_to_id)
+
     return {'train_data': train_data, 'valid_data': valid_data,
-            'test_data': test_data, 'word_to_id': word_to_id}
+            'test_data': test_data, 'word_embedding': word_embedding}
 
 
 class DataProducer(object):
@@ -125,11 +159,16 @@ class DataProducer(object):
 
         return x_1, x_2, len_1, len_2, l
 
+
 if __name__ == "__main__":
     ret = build_data('../data')
     train_data = ret['train_data']
     valid_data = ret['valid_data']
     test_data = ret['test_data']
+    word_embedding = ret['word_embedding']
+
+    print(word_embedding[0])
+    print(word_embedding[1])
 
     print(len(test_data))
     test_data_provider = DataProducer(test_data, cycle=False)
@@ -142,4 +181,3 @@ if __name__ == "__main__":
             print(cnt * 1000)
         else:
             break;
-
