@@ -1,6 +1,7 @@
 import spacy
 import csv
 import os
+import numpy as np
 
 
 def _read_magic_feature(filename):
@@ -81,15 +82,64 @@ def build_data(data_dir):
     return {'train_data': train_data, 'valid_data': valid_data,
             'test_data': test_data, 'word_to_id': word_to_id}
 
+
+class DataProducer(object):
+    def __init__(self, data, cycle=True):
+        self.question1 = [d['question1'] for d in data]
+        self.question2 = [d['question2'] for d in data]
+        self.label = [d['label'] for d in data]
+
+        self.cycle = cycle
+        self.size = len(data)
+        self.cursor = 0
+
+    def next(self, n):
+        if (self.cursor + n - 1 >= self.size):
+            if self.cycle:
+                self.cursor = 0
+            else:
+                return None
+        curr_question1 = self.question1[self.cursor:self.cursor+n]
+        curr_question2 = self.question2[self.cursor:self.cursor+n]
+        curr_label = self.label[self.cursor:self.cursor+n]
+        self.cursor += n
+
+        length_1 = [len(l) for l in curr_question1]
+        length_2 = [len(l) for l in curr_question2]
+        max_length_1 = max(l for l in length_1)
+        max_length_2 = max(l for l in length_2)
+
+        x_1 = np.zeros([n, max_length_1], dtype=np.int32)
+        x_2 = np.zeros([n, max_length_2], dtype=np.int32)
+        len_1 = np.array(length_1)
+        len_2 = np.array(length_2)
+        l = np.zeros([n, 1])
+
+        for i, x_i in enumerate(x_1):
+            x_i[:len(curr_question1[i])] = np.array(curr_question1[i])
+        for i, x_i in enumerate(x_2):
+            x_i[:len(curr_question2[i])] = np.array(curr_question2[i])
+
+        for i, l_i in enumerate(l):
+            l_i[0] = curr_label[i]
+
+        return x_1, x_2, len_1, len_2, l
+
 if __name__ == "__main__":
     ret = build_data('../data')
     train_data = ret['train_data']
     valid_data = ret['valid_data']
     test_data = ret['test_data']
-    print(len(train_data))
-    print(len(valid_data))
+
     print(len(test_data))
-    print(train_data[0]['label'])
-    print(train_data[0]['question1'])
-    print(train_data[0]['question2'])
-    print(train_data[0]['magic_feature'])
+    test_data_provider = DataProducer(test_data, cycle=False)
+
+    cnt = 0
+    while True:
+        data = test_data_provider.next(1000)
+        if data is not None:
+            cnt += 1
+            print(cnt * 1000)
+        else:
+            break;
+
