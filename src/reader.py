@@ -129,9 +129,8 @@ class DataProducer(object):
 
     def next(self, n):
         if (self.cursor + n - 1 >= self.size):
-            if self.cycle:
-                self.cursor = 0
-            else:
+            self.cursor = 0
+            if self.cycle is False:
                 return None
         curr_question1 = self.question1[self.cursor:self.cursor+n]
         curr_question2 = self.question2[self.cursor:self.cursor+n]
