@@ -69,32 +69,31 @@ def _build_data(word_to_id, filename, magic_feature_filename):
 
 
 def _initialize_random_matrix(shape, scale=0.05, seed=0):
-  if len(shape) != 2:
-    raise ValueError("Shape of embedding matrix must be 2D, "
-                     "got shape {}".format(shape))
-  numpy_rng = np.random.RandomState(seed)
+    if len(shape) != 2:
+        raise ValueError("Shape of embedding matrix must be 2D, "
+                         "got shape {}".format(shape))
+    numpy_rng = np.random.RandomState(seed)
 
-  return numpy_rng.uniform(low=-scale, high=scale, size=shape)
+    return numpy_rng.uniform(low=-scale, high=scale, size=shape)
 
 
 def _get_word_embedding(wv_path, word_to_id):
-  m = _initialize_random_matrix((1 + len(word_to_id), 300))
-  cnt = 0
-  wv_file = open(wv_path)
-  while True:
-    line = wv_file.readline()
-    if not line:
-      break
-    cnt += 1
-    tokens = line.strip().split(' ')
-    if word_to_id[tokens[0].strip()] != cnt:
-      print('ERROR')
-      break
+    m = _initialize_random_matrix((1 + len(word_to_id), 300))
+    cnt = 0
+    wv_file = open(wv_path)
+    while True:
+        line = wv_file.readline()
+        if not line:
+            break
+        cnt += 1
+        tokens = line.strip().split(' ')
+        if word_to_id[tokens[0].strip()] != cnt:
+            print('ERROR')
+            break
+        m[cnt] = [np.float32(tokens[i]) for i in range(1, len(tokens))]
+    wv_file.close()
 
-    m[cnt] = [np.float32(tokens[i]) for i in range(1, len(tokens))]
-  wv_file.close()
-
-  return m
+    return m
 
 
 def build_data(data_dir):
