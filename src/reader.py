@@ -136,8 +136,8 @@ class DataProducer(object):
         curr_label = self.label[self.cursor:self.cursor+n]
         self.cursor += n
 
-        length_1 = [len(l) for l in curr_question1]
-        length_2 = [len(l) for l in curr_question2]
+        length_1 = [len(l) if len(l) < 30 else 30 for l in curr_question1]
+        length_2 = [len(l) if len(l) < 30 else 30 for l in curr_question2]
         max_length_1 = max(l for l in length_1)
         max_length_2 = max(l for l in length_2)
 
@@ -148,9 +148,9 @@ class DataProducer(object):
         l = np.zeros([n, 1])
 
         for i, x_i in enumerate(x_1):
-            x_i[:len(curr_question1[i])] = np.array(curr_question1[i])
+            x_i[:length_1[i]] = np.array(curr_question1[i][:length_1[i]])
         for i, x_i in enumerate(x_2):
-            x_i[:len(curr_question2[i])] = np.array(curr_question2[i])
+            x_i[:length_2[i]] = np.array(curr_question2[i][:length_2[i]])
 
         for i, l_i in enumerate(l):
             l_i[0] = curr_label[i]
