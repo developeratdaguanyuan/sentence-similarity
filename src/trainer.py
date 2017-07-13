@@ -2,11 +2,11 @@ import tensorflow as tf
 import reader
 
 from models import lstm
+from models import gru
+from models import bigru
 from models import bilstm
+from models import bigru2layers
 
-#from models import rnn
-#from models import lstm
-#from models import birnn
 #from models import lstm_magic
 #from models import decomposable_attention
 #from models import intra_sentence_decomposable_attention
@@ -23,12 +23,35 @@ def main(_):
     train_data_producer = reader.DataProducer(train_data)
     valid_data_producer = reader.DataProducer(valid_data, False)
 
+    # BiGRU2Layers
+    graph = gru.GRU(vocab_size=len(word_embedding),
+                    class_size=1,
+                    word_vectors=word_embedding)
+    graph.train(train_data_producer, valid_data_producer, 10)
 
+'''
+    # BiGRU2Layers
+    graph = bigru2layers.BiGRU2Layers(vocab_size=len(word_embedding),
+                                      class_size=1,
+                                      word_vectors=word_embedding)
+    graph.train(train_data_producer, valid_data_producer, 10)
+'''
+
+'''
+    # BiGRU
+    graph = bigru.BiGRU(vocab_size=len(word_embedding),
+                        class_size=1,
+                        word_vectors=word_embedding)
+    graph.train(train_data_producer, valid_data_producer, 10)
+'''
+
+'''
     # BiLSTM
     graph = bilstm.BiLSTM(vocab_size=len(word_embedding),
                           class_size=1,
                           word_vectors=word_embedding)
     graph.train(train_data_producer, valid_data_producer, 10)
+'''
 
 '''
     # LSTM
