@@ -2,6 +2,7 @@ import tensorflow as tf
 import reader
 
 from models import lstm
+from models import bilstm
 
 #from models import rnn
 #from models import lstm
@@ -12,11 +13,6 @@ from models import lstm
 #from models import enhanced_lstm
 
 data_dir = "../data"
-wv_path = '../data/glove.840B.300d.short.txt'
-batch_size = 100
-embedding_size = 300
-hidden_size = 300
-learning_rate = 1e-3
 
 def main(_):
     data = reader.build_data(data_dir)
@@ -27,10 +23,20 @@ def main(_):
     train_data_producer = reader.DataProducer(train_data)
     valid_data_producer = reader.DataProducer(valid_data, False)
 
+
+    # BiLSTM
+    graph = bilstm.BiLSTM(vocab_size=len(word_embedding),
+                          class_size=1,
+                          word_vectors=word_embedding)
+    graph.train(train_data_producer, valid_data_producer, 10)
+
+'''
+    # LSTM
     graph = lstm.LSTM(vocab_size=len(word_embedding),
                       class_size=1,
                       word_vectors=word_embedding)
     graph.train(train_data_producer, valid_data_producer, 10)
+'''
 
 """
   # intra_sentence_decomposable_attention
