@@ -92,8 +92,9 @@ class BiLSTM(object):
     '''
     scope_name = scope or 'bilstm'
     with tf.variable_scope(scope_name, reuse=reuse):
-      cell_fw = tf.nn.rnn_cell.GRUCell(unit_num)
-      cell_bw = tf.nn.rnn_cell.GRUCell(unit_num)
+      initializer = tf.random_uniform_initializer(-0.1, 0.1)
+      cell_fw = tf.nn.rnn_cell.LSTMCell(unit_num, initializer=initializer)
+      cell_bw = tf.nn.rnn_cell.LSTMCell(unit_num, initializer=initializer)
       init_state_fw = tf.get_variable('init_state_fw',
                                       [1, unit_num],
                                       initializer=tf.constant_initializer(0.0))
@@ -102,9 +103,9 @@ class BiLSTM(object):
                                       [1, unit_num],
                                       initializer=tf.constant_initializer(0.0))
       init_state_bw = tf.tile(init_state_bw, [self.batch, 1])
-      outputs, final_state = tf.nn.bidirectional_dynamic_rnn(cell_fw, cell_bw, sentences, length,
-                                                             initial_state_fw=init_state_fw,
-                                                             initial_state_bw=init_state_bw)
+      outputs, final_state = tf.nn.bidirectional_dynamic_rnn(cell_fw, cell_bw, sentences, length, dtype=tf.float32)#,
+                                                             #initial_state_fw=init_state_fw,
+                                                             #initial_state_bw=init_state_bw)
       output_fw, output_bw = outputs
       concat_outputs = tf.concat(2, [output_fw, output_bw])
 
@@ -127,8 +128,8 @@ class BiLSTM(object):
       num_iteration = num_epoch * train_data_producer.size / self.batch
       for i in range(num_iteration):
         question_1, question_2, _, _, label = train_data_producer.next(self.batch)
-        seq_1 = np.array([question_1.shape[1] for j in range(self.batch)])
-        seq_2 = np.array([question_2.shape[1] for j in range(self.batch)])
+        seq_1 = np.array([question_1.shape[1] for _ in range(self.batch)])
+        seq_2 = np.array([question_2.shape[1] for _ in range(self.batch)])
         feed = {self.s1: question_1, self.s2: question_2, self.s1_length: seq_1, self.s2_length: seq_2, self.y: label}
 
         ret = self.sess.run([self.optimizer, self.loss], feed_dict=feed)
